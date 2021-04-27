@@ -915,3 +915,24 @@ Given /^I get(?: (\d+))? logs from the #{QUOTED} kafka consumer job in the #{QUO
   }
   raise "Couldn't retrieve kafka records #{pod.name}" unless success
 end
+
+# Verify all user can login the kibana 
+Given /All users check their status / do | check_type | 
+   for i in  @users.length-1
+     user(i)
+     Given I wait up to 300 seconds for the steps to pass:
+     """
+       And I run the :go_to_kibana_discover_page web action
+       Then the step should succeed
+     """
+     # check the log count, wait for the Kibana console to be loaded
+     When I perform the :kibana_find_index_pattern web action with:
+        | index_pattern_name | *app |
+     Then the step should succeed
+     Given I wait up to 300 seconds for the steps to pass:
+     """
+     When I run the :check_log_count web action
+     Then the step should succeed
+     """
+  end
+end
