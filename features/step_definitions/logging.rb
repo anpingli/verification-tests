@@ -917,7 +917,7 @@ Given /^I get(?: (\d+))? logs from the #{QUOTED} kafka consumer job in the #{QUO
 end
 
 # Verify all user can login the kibana 
-Given /All users check their status / do | check_type | 
+Given /All users check long run status/ do | type | 
    for i in  @users.length-1
      user(i)
      Given I wait up to 300 seconds for the steps to pass:
