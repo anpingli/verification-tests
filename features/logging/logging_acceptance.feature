@@ -24,6 +24,15 @@ Feature: Logging smoke test case
       | update_channel    | <%= cb.clo_channel %> |
       | install_mode      | OwnNamespace          |
       | approval_strategy | Automatic             |
+    Given I use the "openshift-logging" project
+    When I run the :get client command with:
+      | resource      | subscription |
+      | o             | yaml |
+    Then the step should succeed
+    When I run the :get client command with:
+      | resource      | operatorgroup |
+      | o             | yaml |
+    Then the step should succeed
     Given cluster logging operator is ready
     # subscribe elasticsearch-operator
     When I perform the :goto_operator_subscription_page web action with:
