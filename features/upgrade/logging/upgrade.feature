@@ -43,6 +43,7 @@ Feature: Logging upgrading related features
     Given I create a project with non-leading digit name
     Then evaluation of `project.name` is stored in the :proj1 clipboard
     And I have "json" log pod in project "<%= cb.proj1 %>"
+    And admin ensures "<%= cb.proj1 %>" project is deleted after scenario
     Given I wait for clusterlogging to be functional in the project
     # check the logs collected before upgrading
     # ensure there are no new PVCs after upgrading
@@ -66,6 +67,7 @@ Feature: Logging upgrading related features
     Given I create a project with non-leading digit name
     Then evaluation of `project.name` is stored in the :proj2 clipboard
     Then I have "json" log pod in project "<%= cb.proj2 %>"
+    And admin ensures "<%= cb.proj2 %>" project is deleted after scenario
     Given I switch to cluster admin pseudo user
     Given I use the "openshift-logging" project
     And I wait for the project "<%= cb.proj2 %>" logs to appear in the ES pod
@@ -78,6 +80,3 @@ Feature: Logging upgrading related features
     When I login to kibana logging web console
     Then I can display the pod logs of the "logging-upg-prep-share" project under the "*app" pattern in kibana
     Then I close the current browser
-    Given I switch to the first user
-    Then The "<%= cb.proj1 %>" project is deleted
-    Then The "<%= cb.proj2 %>" project is deleted
