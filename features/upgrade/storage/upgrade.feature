@@ -3,6 +3,15 @@ Feature: Storage upgrade tests
   @upgrade-prepare
   @users=upuser1,upuser2
   @admin
+  @aws-ipi
+  @gcp-upi
+  @gcp-ipi
+  @4.10 @4.9
+  @aws-upi
+  @vsphere-ipi
+  @azure-ipi
+  @openstack-ipi
+  @openstack-upi
   Scenario: Cluster operator storage should be in correct status and dynamic provisioning should work well after upgrade - prepare
     Given I switch to cluster admin pseudo user
     # Check cluster operator storage should be in correct status
@@ -70,12 +79,9 @@ Feature: Storage upgrade tests
   @upgrade-check
   @users=upuser1,upuser2
   @admin
-  @aws-ipi
-  @gcp-upi
-  @gcp-ipi
   @4.10 @4.9
-  @aws-upi
-  @vsphere-ipi
+  @vsphere-ipi @openstack-ipi @gcp-ipi @azure-ipi @aws-ipi
+  @vsphere-upi @openstack-upi @gcp-upi @azure-upi @aws-upi
   Scenario: Cluster operator storage should be in correct status and dynamic provisioning should work well after upgrade
     Given I switch to cluster admin pseudo user
     # Check storage operator version after upgraded
@@ -156,6 +162,8 @@ Feature: Storage upgrade tests
   @upgrade-prepare
   @users=upuser1,upuser2
   @admin
+  @4.10 @4.9
+  @baremetal-ipi
   Scenario: Cluster operator storage should be in correct status after upgrade - prepare
     Given I switch to cluster admin pseudo user
     # Check cluster operator storage should be in correct status
@@ -170,6 +178,7 @@ Feature: Storage upgrade tests
   @users=upuser1,upuser2
   @admin
   @4.10 @4.9
+  @baremetal-ipi
   Scenario: Cluster operator storage should be in correct status after upgrade
     Given I switch to cluster admin pseudo user
     # Check storage operator version after upgraded
@@ -185,6 +194,8 @@ Feature: Storage upgrade tests
   @upgrade-prepare
   @users=upuser1,upuser2
   @admin
+  @aws-ipi
+  @aws-upi
   Scenario: Snapshot operator should be in available status after upgrade and can created pod with snapshot - prepare
     Given the master version >= "4.4"
 
@@ -297,8 +308,6 @@ Feature: Storage upgrade tests
   # @case_id OCP-28630
   @upgrade-check
   @admin
-  @aws-ipi
-  @aws-upi
   Scenario: Snapshot operator should be in available status after upgrade and can created pod with snapshot
     Given I switch to cluster admin pseudo user
 
@@ -359,7 +368,7 @@ Feature: Storage upgrade tests
   Scenario: [AWS-EBS-CSI] [Snapshot operator] should work well before and after upgrade of a cluster - prepare
     Given I switch to cluster admin pseudo user
     Given the master version >= "4.7"
-      
+
     #Snapshot operator/controller status checking
     Given the "csi-snapshot-controller" operator version matches the current cluster version
 
@@ -372,13 +381,13 @@ Feature: Storage upgrade tests
       | project_name | snapshot-upgrade-ocp-44578 |
     When I use the "snapshot-upgrade-ocp-44578" project
 
-    # Create pvc with csi storage class 
+    # Create pvc with csi storage class
     Given I obtain test data file "storage/misc/pvc-with-storageClassName.json"
     When I run oc create over "pvc-with-storageClassName.json" replacing paths:
       | ["metadata"]["name"]         | mypvc-ori-beforeupgrade-prepare |
       | ["spec"]["storageClassName"] | gp2-csi                         |
 
-    # Create deployment and write data 
+    # Create deployment and write data
     Given I obtain test data file "storage/misc/deployment.yaml"
     When I run oc create over "deployment.yaml" replacing paths:
       | ["metadata"]["name"]                                                             | mydep-ori-beforeupgrade-prepare |
@@ -395,29 +404,29 @@ Feature: Storage upgrade tests
     Then the step should succeed
     And I execute on the pod:
       | sh | -c | sync -f /mnt/csipath/test-before-upgrade |
-    
-    # Create volumesnapshot class 
+
+    # Create volumesnapshot class
     Given I obtain test data file "storage/csi/volumesnapshotclass-aws.yaml"
     When I run oc create over "volumesnapshotclass-aws.yaml" replacing paths:
       | ["metadata"]["name"] | csi-aws-ebs-snapshotclass-prepare |
     Then the step should succeed
-   
+
     # Create volumesnapshot and check for the status
     Given I obtain test data file "storage/csi/volumesnapshot_v1.yaml"
-    When I run oc create over "volumesnapshot_v1.yaml" replacing paths:  
+    When I run oc create over "volumesnapshot_v1.yaml" replacing paths:
       | ["metadata"]["name"]                            | csi-aws-ebs-snapshot-prepare      |
-      | ["spec"]["volumeSnapshotClassName"]             | csi-aws-ebs-snapshotclass-prepare |      
+      | ["spec"]["volumeSnapshotClassName"]             | csi-aws-ebs-snapshotclass-prepare |
       | ["spec"]["source"]["persistentVolumeClaimName"] | mypvc-ori-beforeupgrade-prepare   |
     Then the step should succeed
     And I wait up to 200 seconds for the steps to pass:
-   
+
     """
     When I run the :describe client command with:
       | resource | volumesnapshot               |
       | name     | csi-aws-ebs-snapshot-prepare |
     Then the output should match "Ready To Use\:\s+true"
     """
-    
+
     # Create restore pvc with snapshot before upgrade
     Given I obtain test data file "storage/csi/restorepvc.yaml"
     Then I run oc create over "restorepvc.yaml" replacing paths:
@@ -432,12 +441,12 @@ Feature: Storage upgrade tests
       | ["metadata"]["name"]                                                             | mydep-res-beforeupgrade-prepare |
       | ["spec"]["template"]["metadata"]["labels"]["action"]                             | mydep-res-beforeupgrade-prepare |
       | ["spec"]["template"]["spec"]["volumes"][0]["persistentVolumeClaim"]["claimName"] | mypvc-res-beforeupgrade-prepare |
-      | ["spec"]["template"]["spec"]["containers"][0]["volumeMounts"][0]["mountPath"]    | /mnt/csipath                    | 
-    
+      | ["spec"]["template"]["spec"]["containers"][0]["volumeMounts"][0]["mountPath"]    | /mnt/csipath                    |
+
     Then the step should succeed
     And a pod becomes ready with labels:
-      | action=mydep-res-beforeupgrade-prepare |     
- 
+      | action=mydep-res-beforeupgrade-prepare |
+
     When I execute on the pod:
       | ls | /mnt/csipath |
     Then the output should contain:
@@ -448,6 +457,9 @@ Feature: Storage upgrade tests
   @upgrade-check
   @users=upuser1,upuser2
   @admin
+  @4.9
+  @aws-ipi
+  @aws-upi
   Scenario: [AWS-EBS-CSI] [Snapshot operator] should work well before and after upgrade of a cluster
     Given I switch to cluster admin pseudo user
     Given the master version >= "4.7"
@@ -462,7 +474,7 @@ Feature: Storage upgrade tests
 
     #Restore works
     When I use the "snapshot-upgrade-ocp-44578" project
-    Then the step should succeed 
+    Then the step should succeed
 
     # Create restore pvc with snapshot after upgrade
     Given I obtain test data file "storage/csi/restorepvc.yaml"
@@ -479,10 +491,10 @@ Feature: Storage upgrade tests
       | ["spec"]["template"]["metadata"]["labels"]["action"]                             | mydep-res-afterupgrade-prepare |
       | ["spec"]["template"]["spec"]["volumes"][0]["persistentVolumeClaim"]["claimName"] | mypvc-res-afterupgrade-prepare |
       | ["spec"]["template"]["spec"]["containers"][0]["volumeMounts"][0]["mountPath"]    | /mnt/csipath                   |
-    
+
     Then the step should succeed
     And a pod becomes ready with labels:
-      | action=mydep-res-afterupgrade-prepare | 
+      | action=mydep-res-afterupgrade-prepare |
 
     When I execute on the pod:
       | touch | /mnt/csipath/test-after-upgrade |
@@ -498,7 +510,7 @@ Feature: Storage upgrade tests
       | project_name | snapshot-upgrade-ocp-44578-check |
     When I use the "snapshot-upgrade-ocp-44578-check" project
 
-    # Create pvc  csi storage class 
+    # Create pvc  csi storage class
     Given I obtain test data file "storage/misc/pvc-with-storageClassName.json"
     When I run oc create over "pvc-with-storageClassName.json" replacing paths:
       | ["metadata"]["name"]         | mypvc-ori-afterupgrade-check |
@@ -514,8 +526,8 @@ Feature: Storage upgrade tests
 
     Then the step should succeed
     And a pod becomes ready with labels:
-      | action=mydep-ori-afterupgrade-check |  
- 
+      | action=mydep-ori-afterupgrade-check |
+
     When I execute on the pod:
       | touch | /mnt/csipath/test-after-upgrade |
     Then the step should succeed
@@ -527,23 +539,23 @@ Feature: Storage upgrade tests
     When I run oc create over "volumesnapshotclass-aws.yaml" replacing paths:
       | ["metadata"]["name"] | csi-aws-ebs-snapshotclass-check |
     Then the step should succeed
-   
+
     # Create volumesnapshot and check for the status
     Given I obtain test data file "storage/csi/volumesnapshot_v1.yaml"
-    When I run oc create over "volumesnapshot_v1.yaml" replacing paths:  
+    When I run oc create over "volumesnapshot_v1.yaml" replacing paths:
       | ["metadata"]["name"]                            | csi-aws-ebs-snapshot-check      |
-      | ["spec"]["volumeSnapshotClassName"]             | csi-aws-ebs-snapshotclass-check |      
+      | ["spec"]["volumeSnapshotClassName"]             | csi-aws-ebs-snapshotclass-check |
       | ["spec"]["source"]["persistentVolumeClaimName"] | mypvc-ori-afterupgrade-check    |
     Then the step should succeed
     And I wait up to 200 seconds for the steps to pass:
-   
+
     """
     When I run the :describe client command with:
       | resource | volumesnapshot             |
       | name     | csi-aws-ebs-snapshot-check |
     Then the output should match "Ready To Use\:\s+true"
     """
-    
+
     # Create restore pvc with snapshot
     Given I obtain test data file "storage/csi/restorepvc.yaml"
     Then I run oc create over "restorepvc.yaml" replacing paths:
@@ -563,7 +575,7 @@ Feature: Storage upgrade tests
     Then the step should succeed
     And a pod becomes ready with labels:
       | action=mydep-res-afterupgrade-check |
-   
+
     When I execute on the pod:
       | touch | /mnt/csipath/test-afterupgrade-check |
     Then the step should succeed

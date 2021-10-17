@@ -57,9 +57,14 @@ Feature: Dynamic provisioning
       | <%= cb.volumeID %>     |
     And I verify that the IAAS volume with id "<%= cb.volumeID %>" was deleted
 
+    @openstack-ipi @azure-ipi
+    @openstack-upi @azure-upi
     Examples:
       | cloud_provider |
-      | cinder         | # @case_id OCP-9656
       | ebs            | # @case_id OCP-9685
       | gce            | # @case_id OCP-12665
       | azure          | # @case_id OCP-13787
+
+    Examples:
+      | cloud_provider |
+      | cinder         | # @case_id OCP-9656

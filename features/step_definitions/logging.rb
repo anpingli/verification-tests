@@ -224,6 +224,7 @@ end
 
 Given /^I wait until fluentd is ready$/ do
   step %Q/logging collector name is stored in the :collector_name clipboard/
+  step %Q/I wait for the "<%= cb.collector_name %>" daemon_set to appear up to 300 seconds/
   step %Q/#{daemon_set("#{cb.collector_name}").replica_counters[:desired]} pods become ready with labels:/, table(%{
     | logging-infra=#{cb.collector_name} |
   })
@@ -889,7 +890,7 @@ Given /^I deploy kafka in the #{QUOTED} project via amqstream operator$/ do | pr
   @result = admin.cli_exec(:create, f: "#{BushSlicer::HOME}/testdata/logging/clusterlogforwarder/kafka/amq/05_kafkatopics_amqstreams.yaml")
   raise "Error create kafka topics" unless @result[:success]
 
-  step %Q/3 pods becomes ready with labels:/, table(%{
+  step %Q/1 pod becomes ready with labels:/, table(%{
     | strimzi.io/name=my-cluster-kafka |
   })
   raise "Error kafka cluster not ready" unless @result[:success]

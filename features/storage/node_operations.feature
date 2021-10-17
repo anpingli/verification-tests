@@ -35,13 +35,14 @@ Feature: Node operations test scenarios
     And a pod becomes ready with labels:
       | name=jenkins |
 
+    @vsphere-ipi @openstack-ipi @azure-ipi
+    @vsphere-upi @openstack-upi @azure-upi
     Examples:
       | cloud_provider |
       | gcp            | # @case_id OCP-15287
     Examples:
       | cloud_provider |
       | azure-disk     | # @case_id OCP-15275
-    @vsphere-ipi
     Examples:
       | cloud_provider |
       | vsphere-volume | # @case_id OCP-15268
