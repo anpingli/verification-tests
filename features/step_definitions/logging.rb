@@ -397,7 +397,7 @@ Given /^(cluster-logging|elasticsearch-operator) channel name is stored in the#{
     when '4.9'
       cb[cb_name] = "stable-5.2"
     when '4.10'
-      cb[cb_name] = "stable-5.3"
+      cb[cb_name] = "stable"
     else
       cb[cb_name] = "stable"
     end
@@ -1216,4 +1216,35 @@ Given /^logging collector name is stored in the#{OPT_SYM} clipboard$/ do | colle
      fluentd_component_label="fluentd"
   end
   cb[collector_name] = fluentd_component_label
+end
+
+# Delete the fluentd buffer files on nodes
+Given /^logging collector buffer files are cleaned up$/ do
+  ensure_admin_tagged
+  serviceaccount="collector-clean"
+  ds_name="collector-clean"
+
+  step %Q/I switch to cluster admin pseudo user/
+  step %Q/I use the "openshift-logging" project/
+  step %Q/logging collector name is stored in the :collector_name clipboard/
+  # Make sure no fluentd pod
+  fluentd_pods = BushSlicer::Pod.get_labeled("logging-infra=<%= cb.collector_name %>", project: project("openshift-logging", switch: false), user: admin)
+  if(fluentd_pods.length()>0)
+    raise "Error, Can not clean the  buffer files, some collector pods are still exist"
+  end
+
+  step %Q/I have a project/
+  step %Q/I create the serviceaccount "#{serviceaccount}"/
+  step %Q/SCC privileged is added to the #{QUOTED} service account/
+
+  step %Q/I run the :create admin command with:/,table(%{
+    | f | collector_clear.json |
+    | n | #{project_name}       |
+  })
+
+  step %Q/<%= daemon_set(ds_name).replica_counters[:desired] %> pods become ready with labels:/, table(%{
+    | logging-infra=#{ds_name} |
+  })
+  step %Q/SCC privileged is removed from the #{QUOTED} service account/
+  step %Q/I delete the project/
 end
